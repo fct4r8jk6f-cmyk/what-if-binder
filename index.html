@@ -148,7 +148,7 @@
     .wline+.wline{margin-top:5px}
     .pcard{border:1px solid #bbb; border-radius:6px; padding:9px 11px 1px; margin:0 0 9px; page-break-inside:avoid}
     .pcard .pf{margin-bottom:8px}
-    .plisthead{font-size:14px; font-weight:bold; color:#143f3c; margin:14px 0 8px}
+    .plisthead{font-size:14px; font-weight:bold; color:#143f3c; margin:14px 0 8px; break-after:avoid; page-break-after:avoid}
     .pphase{page-break-inside:avoid; margin-bottom:10px}
     .pphase h3{font-size:14px; color:#b07a2a; margin:0 0 3px}
     .pphase ul{margin:0; padding-left:18px}
@@ -173,7 +173,7 @@
   <div class="toolbar">
     <span id="savedNote"></span>
     <span class="spacer"></span>
-    <button id="btnExport" title="Download a backup file of your answers">Backup file</button>
+    <button id="btnExport" title="Download a backup file of your answers">Save a backup</button>
     <button id="btnImport" title="Restore answers from a backup file">Restore</button>
     <input type="file" id="fileImport" accept=".json,application/json" hidden>
     <button id="btnPrint" class="primary" title="Print the binder, or save it as a PDF">Print binder</button>
@@ -229,7 +229,7 @@ const L = {
   printCoverOf: 'The family binder of',
   printUpdated: d => 'Last updated ' + d,
   heirTitle: 'If you are reading this…',
-  heirSub: 'Start here. This one page tells you where everything else is. Keep it with the will.',
+  heirSub: "First, breathe — you don't have to sort all of this out today. This one page shows you where everything else is kept. Start here, and keep it with the will.",
   spareCard: 'blank — fill in by hand',
   printFooter: 'The What-If Binder · an organizational tool, not legal advice · review every 6 months',
   importConfirm: 'Restore from this backup? Your current answers in this browser will be replaced.',
@@ -243,24 +243,24 @@ const L = {
 const FIRST_WEEKS = [
   { when: 'Right away', items: [
     "Don't do this alone — call someone from Key People (section 3) to sit with you.",
-    'If death was at home and unexpected, call emergency services; they will guide you.',
+    "If they died at home and it was unexpected, call emergency services — they'll guide you through what happens next.",
     'Find this binder and the will (section 14 says where the original is).',
     'Make sure children and pets are cared for tonight (sections 6 and 7).',
-    'Lock up the home and vehicles if empty.',
+    'If the home will be empty, lock it up and make sure any vehicles are secure.',
   ]},
   { when: 'The first days', items: [
     'Contact the funeral home — check Final Wishes (section 15) first; arrangements may already be made and paid for.',
-    'Ask the funeral director for death certificates — order at least 10 official copies; banks, insurers, and government each want their own.',
+    'Ask the funeral home how to get death certificates — order at least 10 official copies (the funeral home can often help, or your state or provincial vital-records office). Banks, insurers, and government each want their own.',
     "Do NOT cancel their phone plan or email — you'll need them to receive security codes for accounts. Keep both active for months.",
     'Notify close family and their employer (section 12 has the HR contact).',
-    'Locate keys, wallet, and important cards; keep mail coming in one place.',
+    'Locate keys, wallet, and important cards; gather the incoming mail in one place so nothing gets lost.',
   ]},
   { when: 'The first weeks', items: [
     'Meet the executor and the lawyer or notary (sections 3 and 14).',
     'Start life-insurance claims (section 10) — these usually pay before the estate settles.',
-    'Notify banks and government (pension, survivor benefits) using certified death certificates.',
+    'Notify banks and government (pension, survivor benefits) using the official death certificates.',
     'Go through Bills & Subscriptions (section 9) and cancel what should stop.',
-    'Be alert for scams: fraudsters read obituaries. Verify anyone who calls claiming debts.',
+    "Be gentle with yourself, and a little wary: scammers do read obituaries. If someone calls about a debt, it's okay to take their details and check before paying anything.",
   ]},
 ];
 
@@ -276,9 +276,11 @@ const SCHEMA = [
       { id:'loc_print', label:'Where the printed copy of this binder lives', type:'text',
         hint:"Be specific: 'red folder, bottom drawer of the office filing cabinet'." },
       { id:'loc_digital', label:'Where this digital file lives', type:'text',
-        hint:"e.g. 'family laptop → Documents → Binder', plus the USB stick in the safe." },
+        hint:"e.g. 'on the family laptop, in the Documents folder, in a folder called Binder', plus the USB stick in the safe." },
+      { id:'copies', label:'Who else has a copy — and who should get an updated one', type:'text',
+        hint:"e.g. 'my spouse, my sister Anne, the executor'. When you change anything here, re-send the binder to everyone on this list so no one is left with an old version — a good habit is to review it every 6 months." },
       { id:'letter', label:'A letter to your family', type:'textarea',
-        hint:"If they're reading this, the worst has happened. What do you want them to know first? You can come back to this one." },
+        hint:"If your family is reading this, the hardest day has come — and these may be the first words they reach for. What do you most want them to know? There's no rush; you can always come back to this one." },
     ]},
 
   { id:'firstweeks', title:'First Two Weeks',
@@ -300,7 +302,7 @@ const SCHEMA = [
         { id:'notes', label:'Notes', type:'text', hint:'e.g. has a house key, lives nearby, speaks for me at the hospital.' },
       ]},
       { id:'pros', label:'Professionals', itemLabel:'Professional', fields:[
-        { id:'role', label:'Role', type:'text', hint:'Lawyer / notary, accountant, financial advisor, insurance agent, executor…' },
+        { id:'role', label:'Role', type:'text', hint:'Accountant, financial advisor, insurance agent, doctor… (the executor and your lawyer / notary each have their own place in Legal Documents, section 14.)' },
         { id:'name', label:'Name & firm', type:'text' },
         { id:'phone', label:'Phone', type:'text' },
         { id:'email', label:'Email', type:'text' },
@@ -309,7 +311,7 @@ const SCHEMA = [
     ]},
 
   { id:'aboutme', title:'About Me',
-    desc:'The identity details paperwork will ask for — and where the documents that prove them live.',
+    desc:'All the personal details that forms and offices will ask for — and where the documents that prove them are kept.',
     fields:[
       { id:'legal_name', label:'Full legal name', type:'text' },
       { id:'aka', label:'Also known as', type:'text', hint:'Maiden name, nicknames used on accounts.' },
@@ -335,8 +337,8 @@ const SCHEMA = [
       { id:'bloodtype', label:'Blood type', type:'text' },
       { id:'doctor', label:'Family doctor / clinic', type:'text' },
       { id:'pharmacy', label:'Pharmacy', type:'text' },
-      { id:'insurance', label:'Health insurance', type:'text',
-        hint:'Provider and where the card / policy details are.' },
+      { id:'insurance', label:'Health coverage card', type:'text',
+        hint:'Public health card and any drug plan — where the card is, for the hospital desk. Private life or health policies go in the Insurance section.' },
       { id:'organ', label:'Organ donation', type:'select',
         options:['', 'Yes — registered', 'Yes — my wish, not yet registered', 'No', 'Undecided'] },
       { id:'directive_loc', label:'Where my advance care directive is', type:'text',
@@ -358,7 +360,7 @@ const SCHEMA = [
     ],
     fields:[
       { id:'guardianship', label:'Guardianship wishes', type:'textarea',
-        hint:'Who should raise them, and where this is legally documented. Wishes written here are guidance, not a legal document on their own.' },
+        hint:'Who you would want to raise them, and where this is set down legally. What you write here speaks your wishes and guides your family, but on its own it carries no legal force — so make sure it is named in your will too.' },
       { id:'trusted', label:'Other adults they know and trust', type:'textarea',
         hint:'Babysitters, carpool parents, godparents — with phone numbers.' },
     ]},
@@ -387,15 +389,16 @@ const SCHEMA = [
         { id:'joint', label:'Joint with / beneficiary', type:'text' },
       ]},
       { id:'cards', label:'Credit cards', itemLabel:'Card', fields:[
-        { id:'issuer', label:'Issuer', type:'text' },
+        { id:'issuer', label:'Issuer (bank or company on the card)', type:'text' },
         { id:'last4', label:'Last 4 digits', type:'text' },
         { id:'notes', label:'Notes', type:'text', hint:'Autopays on it? Where the card lives?' },
       ]},
       { id:'invest', label:'Investments & retirement', itemLabel:'Account', fields:[
         { id:'institution', label:'Institution', type:'text' },
-        { id:'type', label:'Type', type:'text', hint:'RRSP, TFSA, 401(k), IRA, pension, brokerage…' },
+        { id:'type', label:'Type', type:'text', hint:'RRSP, TFSA, 401(k), RESP, pension, brokerage…' },
         { id:'contact', label:'Advisor / contact', type:'text' },
-        { id:'notes', label:'Notes', type:'text', hint:'Beneficiary named? Where statements are.' },
+        { id:'beneficiary', label:'Beneficiary named', type:'text', hint:'A named beneficiary — on life insurance, and often on retirement accounts — is usually paid straight to that person, outside the will. The rules vary by state and province, so note who is named and confirm it with the advisor, lawyer, or notary.' },
+        { id:'notes', label:'Notes', type:'text', hint:'Where statements are.' },
       ]},
       { id:'debts', label:'Loans & debts', itemLabel:'Debt', fields:[
         { id:'lender', label:'Lender', type:'text' },
@@ -407,7 +410,9 @@ const SCHEMA = [
       { id:'gov', label:'Government benefits & pensions', type:'textarea',
         hint:'CPP/QPP, OAS, Social Security, veterans benefits — anything that pays you or will.' },
       { id:'deposit_box', label:'Safety deposit box', type:'text',
-        hint:'Bank & branch, box number, and where the key is.' },
+        hint:"Bank & branch, box number, and where the key is. The box may be sealed at death until the executor is authorized to open it — so don't keep the only copy of the will, or anything the family needs right away, locked inside." },
+      { id:'access_now', label:'Money the family can reach right away', type:'text',
+        hint:"Which joint account, or where any emergency cash is kept. Sole-name accounts often freeze at death and settling the estate can take months — this is the money that covers the funeral and bills meanwhile. A joint account isn't always a sure thing either, so the most dependable fast money is usually life insurance paid straight to a named beneficiary. A location, never a PIN." },
     ]},
 
   { id:'bills', title:'Bills & Subscriptions',
@@ -447,7 +452,7 @@ const SCHEMA = [
       { id:'shutoffs', label:'Where the shutoffs are', type:'text',
         hint:'Water main, breaker panel, gas valve.' },
       { id:'safe', label:'Home safe', type:'text',
-        hint:'Where it is, and where the combination hint lives — not the combination.' },
+        hint:'Where the safe is, and where you keep the written-down combination — never the combination itself.' },
       { id:'keys', label:'Spare keys', type:'text', hint:'House, car, mailbox, cottage — who has them, where they hang.' },
       { id:'storage', label:'Storage units & other property', type:'text' },
     ],
@@ -476,12 +481,14 @@ const SCHEMA = [
     fields:[
       { id:'phone', label:'Phone unlock', type:'text',
         hint:"Where the passcode is written down — e.g. 'sealed envelope in the safe'. Not the code itself." },
+      { id:'phone_carrier', label:'Mobile carrier & account', type:'text',
+        hint:'Who the phone plan is with, and where the account login or bill is — so the family can keep the number, and the security codes it receives, alive. The location, not the password.' },
       { id:'pwmanager', label:'Password manager', type:'text',
         hint:'Which one, and where its emergency kit / master-password envelope lives.' },
-      { id:'computer', label:'Computer & tablet logins', type:'text', hint:'Where those passwords are written down.' },
+      { id:'computer', label:'Computer & tablet access', type:'text', hint:'Where those passwords are written down.' },
       { id:'email', label:'Primary email accounts', type:'textarea',
         hint:'List the addresses. Access comes from the password manager above.' },
-      { id:'twofa', label:'Two-factor (2FA) backup codes', type:'text',
+      { id:'twofa', label:'Where 2FA backup codes are kept', type:'text',
         hint:'Where printed backup codes live. Family: keep my phone number active until every account is recovered.' },
       { id:'wifi', label:'Home wifi', type:'text', hint:'Network name, and where the password is.' },
       { id:'accounts', label:'Other important online accounts', type:'textarea',
@@ -491,7 +498,7 @@ const SCHEMA = [
         hint:'Where the wallet and the paper seed-phrase backup are. Never type a seed phrase into any device — paper location only.' },
       { id:'photos', label:'Family photos & backups', type:'text', hint:'Where the photo library and backups actually live.' },
       { id:'social', label:'Social media wishes', type:'textarea',
-        hint:'Memorialize, delete, or leave each account? Facebook legacy contact set?' },
+        hint:"For each account: keep it, delete it, or turn it into a memorial page? On Facebook you can name a 'legacy contact' to look after your page — have you set one?" },
     ]},
 
   { id:'legal', title:'Legal Documents',
@@ -500,11 +507,11 @@ const SCHEMA = [
       { id:'will_exists', label:'Do I have a will?', type:'select',
         options:['', 'Yes', 'No', 'In progress'] },
       { id:'will_loc', label:'Where the original will is', type:'text',
-        hint:'Copies don’t count — courts want the original.' },
+        hint:"The court usually wants the original, not a photocopy — note where it is. If it's a notarial will (common in Quebec), the notary keeps the original, so note which notary." },
       { id:'will_date', label:'Date of the will', type:'date' },
       { id:'executor', label:'Executor', type:'text', hint:'In Quebec: the liquidator (liquidateur).' },
       { id:'poa_fin', label:'Power of attorney — finances', type:'text',
-        hint:'Who holds it, and where the document is.' },
+        hint:'Who holds it, and where the document is. In Quebec, the mandat de protection usually covers finances too once incapacity begins.' },
       { id:'poa_care', label:'Power of attorney — personal care / medical', type:'text',
         hint:'In Quebec: protection mandate (mandat de protection).' },
       { id:'lawyer', label:'Lawyer / notary', type:'text' },
@@ -529,6 +536,8 @@ const SCHEMA = [
         hint:'What you’d want mentioned — and anything you wouldn’t.' },
       { id:'notify', label:'People to notify', type:'textarea',
         hint:'Old friends, colleagues, communities — names your family may not know to call.' },
+      { id:'belongings', label:'Specific belongings & who they go to', type:'textarea',
+        hint:"Jewellery, heirlooms, keepsakes — and where any signed list of specific gifts is kept. What you write here is guidance, not binding: only your will decides who gets what, and a separate list counts only if your will is written to allow it — ask your notary or lawyer." },
       { id:'letters', label:'Letters & messages', type:'text',
         hint:'Where private letters to loved ones are waiting.' },
     ]},
