@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Classeur Au Cas Où</title>
+<style>
+  :root{
+    --paper:#faf6ee; --card:#ffffff; --ink:#26302f; --ink-soft:#5c6a68;
+    --teal:#1f5f5b; --teal-dark:#143f3c; --teal-wash:#e7efed;
+    --gold:#b07a2a; --gold-wash:#f6ecd9; --line:#d9d2c3; --danger:#8c3b2e;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:0 16px 80px}
+  h1,h2,h3,.serif{font-family:Georgia,"Times New Roman",serif; font-weight:normal}
+
+  /* ---------- header ---------- */
+  header.app{padding:34px 0 10px; text-align:center}
+  header.app h1{margin:0; font-size:34px; letter-spacing:.5px; color:var(--teal-dark)}
+  header.app .tag{margin:6px 0 0; color:var(--ink-soft); font-size:15px}
+  .privacy{
+    margin:18px auto 0; max-width:560px; background:var(--teal-wash);
+    border:1px solid #c9dbd8; border-radius:var(--radius);
+    padding:10px 14px; font-size:13.5px; color:var(--teal-dark); text-align:left;
+  }
+  .privacy b{display:block; margin-bottom:2px}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    position:sticky; top:0; z-index:5; background:var(--paper);
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    padding:12px 0; border-bottom:1px solid var(--line); margin-bottom:18px;
+  }
+  .toolbar .spacer{flex:1}
+  button{
+    font:inherit; font-size:14px; cursor:pointer; border-radius:8px;
+    border:1px solid var(--teal); background:var(--card); color:var(--teal);
+    padding:7px 13px;
+  }
+  button.primary{background:var(--teal); color:#fff}
+  button:active{transform:translateY(1px)}
+  #savedNote{font-size:13px; color:var(--ink-soft); min-width:80px}
+  #savedNote.ok{color:var(--teal)}
+
+  .nag{
+    background:var(--gold-wash); border:1px solid #e3cfa4; border-radius:var(--radius);
+    padding:10px 14px; font-size:14px; margin:0 0 18px; display:flex; gap:10px;
+    align-items:center; flex-wrap:wrap;
+  }
+  .nag button{border-color:var(--gold); color:var(--gold)}
+
+  /* ---------- sections ---------- */
+  details.sec{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    margin:0 0 14px; overflow:hidden;
+  }
+  details.sec>summary{
+    list-style:none; cursor:pointer; padding:15px 16px; display:flex;
+    align-items:baseline; gap:10px; user-select:none;
+  }
+  details.sec>summary::-webkit-details-marker{display:none}
+  details.sec>summary .num{
+    font-family:Georgia,serif; color:var(--gold); font-size:15px; min-width:22px;
+  }
+  details.sec>summary h2{margin:0; font-size:20px; color:var(--teal-dark); flex:1}
+  details.sec>summary .count{font-size:12.5px; color:var(--ink-soft); white-space:nowrap}
+  details.sec>summary .chev{color:var(--ink-soft); transition:transform .15s}
+  details.sec[open]>summary .chev{transform:rotate(90deg)}
+  details.sec .desc{padding:0 16px 4px; margin-top:-8px; color:var(--ink-soft); font-size:14px}
+  .secbody{padding:6px 16px 18px}
+
+  .fields{display:block}
+  @media(min-width:620px){
+    .fields{display:grid; grid-template-columns:1fr 1fr; gap:0 20px; align-items:start}
+    .field.wide{grid-column:1/-1}
+  }
+  .field{margin:0 0 16px}
+  .field label{display:block; font-size:14px; font-weight:600; margin-bottom:3px}
+  .field .hint{font-size:12.5px; color:var(--ink-soft); margin:0 0 5px}
+  input[type=text],input[type=date],select,textarea{
+    width:100%; font:inherit; font-size:15px; color:var(--ink);
+    background:#fffdf8; border:1px solid var(--line); border-radius:7px; padding:9px 10px;
+  }
+  textarea{min-height:84px; resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--teal); outline-offset:-1px; border-color:var(--teal)}
+
+  .listwrap h3{font-size:16px; color:var(--teal-dark); margin:20px 0 8px; border-top:1px dashed var(--line); padding-top:16px}
+  .listwrap:first-child h3{border-top:none; padding-top:0; margin-top:4px}
+  .item{
+    border:1px solid var(--line); border-left:3px solid var(--teal);
+    border-radius:8px; padding:12px 12px 4px; margin:0 0 10px; background:#fffdf8;
+  }
+  .item .itemhead{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+  .item .itemhead b{font-size:13px; color:var(--ink-soft); font-weight:600}
+  .item button.rm{border-color:#c9b8b3; color:var(--danger); font-size:12.5px; padding:3px 9px}
+  button.add{border-style:dashed; width:100%; padding:9px}
+
+  /* first-weeks static checklist */
+  .phase{margin:0 0 14px}
+  .phase h3{margin:0 0 4px; font-size:15.5px; color:var(--gold)}
+  .phase ul{margin:0; padding-left:20px; font-size:14.5px}
+  .phase li{margin:3px 0}
+
+  footer.app{margin-top:36px; font-size:12.5px; color:var(--ink-soft); text-align:center}
+
+  /* ---------- print ---------- */
+  #printRoot{display:none}
+  @media print{
+    body{background:#fff; font-size:12.5px; color:#111}
+    .wrap,.toolbar,header.app,footer.app{display:none !important}
+    #printRoot{display:block}
+    @page{margin:18mm 16mm}
+
+    .pcover{min-height:232mm; display:flex; flex-direction:column; justify-content:center;
+      align-items:center; text-align:center; page-break-after:always}
+    .pcover h1{font-size:44px; margin:0; color:#143f3c}
+    .pcover .ptag{font-style:italic; color:#555; margin:10px 0 0; font-size:14px}
+    .pcover .rule{width:60mm; border-bottom:1px solid #b07a2a; margin:26px 0}
+    .pcover .pof{font-size:16px; color:#333}
+    .pcover .pname{font-size:28px; font-family:Georgia,serif;
+      border-bottom:1px solid #999; min-width:90mm; padding:2px 40px 6px; margin-top:6px}
+    .pcover .pupd{margin-top:22px; color:#666; font-size:12px}
+    .pcover .pnote{margin-top:44px; color:#888; font-size:11px}
+
+    .heir{border:3px double #143f3c; padding:20px 24px; page-break-after:always}
+    .heir h1{font-size:24px; margin:0 0 2px; color:#143f3c}
+    .heir .sub{font-style:italic; color:#444; margin:0 0 14px; font-size:13px}
+    .heir .hrow{margin:0 0 10px}
+    .heir .hrow b{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#555}
+    .heir .warn{border:1px solid #999; padding:8px 12px; margin-top:14px; font-size:12px}
+    .heir .warn b{text-transform:none; letter-spacing:0}
+
+    .psec{page-break-before:always}
+    .psec h2{font-size:20px; color:#143f3c; border-bottom:2px solid #143f3c; padding-bottom:4px; margin:0 0 14px}
+    .psec h2 .pn{color:#b07a2a; font-size:14px; margin-right:8px}
+    .pgrid{display:grid; grid-template-columns:1fr 1fr; column-gap:8mm}
+    .pgrid .pf.full{grid-column:1/-1}
+    .pf{margin:0 0 10px; page-break-inside:avoid}
+    .pf b{display:block; font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#555; margin-bottom:2px}
+    .pf .val{white-space:pre-wrap}
+    .wline{display:block; border-bottom:1px solid #aaa; height:19px}
+    .wline+.wline{margin-top:5px}
+    .pcard{border:1px solid #bbb; border-radius:6px; padding:9px 11px 1px; margin:0 0 9px; page-break-inside:avoid}
+    .pcard .pf{margin-bottom:8px}
+    .plisthead{font-size:14px; font-weight:bold; color:#143f3c; margin:14px 0 8px; break-after:avoid; page-break-after:avoid}
+    .pphase{page-break-inside:avoid; margin-bottom:10px}
+    .pphase h3{font-size:14px; color:#b07a2a; margin:0 0 3px}
+    .pphase ul{margin:0; padding-left:18px}
+    .pphase li{margin:2px 0}
+    .pend{margin-top:14mm; font-size:10.5px; color:#666; border-top:1px solid #ccc; padding-top:6px; text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="app">
+    <h1>Le Classeur Au Cas Où</h1>
+    <p class="tag">S’il vous arrivait quelque chose ce soir, votre famille saurait-elle où trouver l’essentiel ?</p>
+    <div class="privacy">
+      <b>Vos réponses ne quittent jamais votre appareil.</b>
+      Un seul fichier qui fonctionne entièrement hors ligne — aucun compte, aucun infonuagique,
+      aucun abonnement. Ne nous croyez pas sur parole : activez le mode avion et continuez.
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <span id="savedNote"></span>
+    <span class="spacer"></span>
+    <button id="btnExport" title="Télécharger une copie de sauvegarde de vos réponses">Sauvegarder une copie</button>
+    <button id="btnImport" title="Restaurer vos réponses à partir d’une copie de sauvegarde">Restaurer</button>
+    <input type="file" id="fileImport" accept=".json,application/json" hidden>
+    <button id="btnPrint" class="primary" title="Imprimer le classeur ou l’enregistrer en PDF">Imprimer le classeur</button>
+  </div>
+
+  <div class="nag" id="backupNag" hidden>
+    <span>Vous avez ajouté beaucoup de choses depuis votre dernière sauvegarde. Vos réponses
+    n’existent que dans ce navigateur — téléchargez une copie de sauvegarde pour les mettre à l’abri.</span>
+    <button id="btnNagExport">Sauvegarder maintenant</button>
+  </div>
+
+  <main id="sections">
+    <!-- Remplacé par l’application au chargement. Visible seulement si le JavaScript
+         ne s’est pas exécuté (aperçu en lecture seule : Fichiers iOS, pièces jointes). -->
+    <div style="background:#fff;border:1px solid #d9d2c3;border-left:4px solid #b07a2a;border-radius:10px;padding:16px 18px;margin-bottom:14px">
+      <p style="margin:0 0 8px"><b>Vous voyez ce message ? Vous êtes dans un aperçu en lecture seule.</b></p>
+      <p style="margin:0 0 8px">Ce fichier est un classeur interactif, et les aperçus de fichiers ne
+      peuvent pas l’exécuter. Il lui faut un navigateur web — et tout reste sur votre propre appareil.</p>
+      <p style="margin:0 0 8px"><b>Sur iPhone ou iPad :</b> ouvrez plutôt la version en ligne dans
+      Safari (le lien se trouve sur votre page de téléchargement) — tout le classeur fonctionne
+      directement, sans rien à installer.</p>
+      <p style="margin:0"><b>Sur un ordinateur :</b> enregistrez ce fichier, puis double-cliquez
+      dessus ; il s’ouvre dans votre navigateur, prêt à remplir, et fonctionne sans aucune connexion Internet.</p>
+    </div>
+  </main>
+
+  <footer class="app">
+    <p>Le Classeur Au Cas Où est un outil d’organisation, et non un avis juridique, financier ou
+    médical. Pour un testament, un mandat de protection ou une question de succession, consultez
+    un notaire ou un avocat.</p>
+    <p>Notez où se trouvent les secrets — jamais les secrets eux-mêmes.</p>
+  </footer>
+</div>
+
+<div id="printRoot"></div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   Chaînes d’interface (chrome). Les libellés de champs sont dans SCHEMA.
+   ============================================================ */
+const L = {
+  saved: 'Enregistré ✓',
+  saving: 'Enregistrement…',
+  answered: n => n === 0 ? '' : n + (n === 1 ? ' réponse' : ' réponses'),
+  addItem: label => '+ Ajouter ' + label.toLowerCase(),
+  removeItem: 'Retirer',
+  itemN: (label, i) => label + ' ' + i,
+  printCoverTitle: 'Le Classeur Au Cas Où',
+  printCoverTag: 'L’essentiel, réuni au même endroit.',
+  printCoverOf: 'Le classeur familial de',
+  printUpdated: d => 'Mis à jour le ' + d,
+  heirTitle: 'Si vous lisez ceci…',
+  heirSub: 'D’abord, respirez — vous n’avez pas à tout régler aujourd’hui. Cette page vous montre où se trouve tout le reste. Commencez ici, et gardez-la avec le testament.',
+  spareCard: 'vierge — à remplir à la main',
+  printFooter: 'Le Classeur Au Cas Où · un outil d’organisation, pas un avis juridique · à revoir tous les 6 mois',
+  importConfirm: 'Restaurer à partir de cette sauvegarde ? Vos réponses actuelles dans ce navigateur seront remplacées.',
+  importBad: 'Ce fichier ne ressemble pas à une sauvegarde du Classeur Au Cas Où.',
+  backupName: 'classeur-au-cas-ou-sauvegarde',
+};
+
+/* ============================================================
+   Contenu fixe : la liste des premiers jours (section 2)
+   ============================================================ */
+const FIRST_WEEKS = [
+  { when: 'Tout de suite', items: [
+    'Ne faites pas cela seul(e) — appelez quelqu’un de la section Personnes-ressources (section 3) pour rester avec vous.',
+    'Si le décès est survenu à la maison et de façon inattendue, appelez le 911 — on vous guidera pour la suite.',
+    'Trouvez ce classeur et le testament (la section 14 indique où se trouve l’original).',
+    'Assurez-vous que les enfants et les animaux sont pris en charge ce soir (sections 6 et 7).',
+    'Si le domicile reste vide, verrouillez-le et assurez-vous que les véhicules sont en sécurité.',
+  ]},
+  { when: 'Les premiers jours', items: [
+    'Communiquez avec le salon funéraire — vérifiez d’abord Dernières volontés (section 15) ; des arrangements sont peut-être déjà pris et payés.',
+    'Procurez-vous des copies d’acte de décès : le salon funéraire déclare le décès, puis c’est le Directeur de l’état civil qui délivre les copies officielles — commandez-en au moins 10. Banques, assureurs et gouvernements en veulent chacun une.',
+    'N’ANNULEZ PAS son forfait téléphonique ni son courriel — ils reçoivent les codes de sécurité nécessaires pour accéder aux comptes. Gardez-les actifs plusieurs mois.',
+    'Prévenez les proches et l’employeur (la section 12 contient le contact des RH).',
+    'Rassemblez clés, portefeuille et cartes importantes ; regroupez le courrier au même endroit pour ne rien perdre.',
+  ]},
+  { when: 'Les premières semaines', items: [
+    'Rencontrez le liquidateur et le notaire (ou l’avocat) — sections 3 et 14.',
+    'Amorcez les réclamations d’assurance vie (section 10) — elles se règlent souvent avant la succession.',
+    'Avisez les banques et les gouvernements (RRQ, rente de conjoint survivant) avec les copies d’acte de décès.',
+    'Passez en revue Factures et abonnements (section 9) et annulez ce qui doit cesser.',
+    'Soyez douce ou doux avec vous-même, et un peu méfiant(e) : les fraudeurs lisent les avis de décès. Si on vous appelle pour une dette, notez les coordonnées et vérifiez avant de payer quoi que ce soit.',
+  ]},
+];
+
+/* ============================================================
+   Le schéma de contenu — rend à la fois le formulaire et la
+   mise en page d’impression. type : text | textarea | date | select
+   ============================================================ */
+const SCHEMA = [
+  { id:'start', title:'Commencer ici',
+    desc:'Cinq minutes maintenant rendront toutes les autres pages faciles à trouver.',
+    fields:[
+      { id:'owner_name', label:'Ce classeur appartient à', type:'text' },
+      { id:'loc_print', label:'Où se trouve la copie imprimée de ce classeur', type:'text',
+        hint:'Soyez précis : « chemise rouge, tiroir du bas du classeur de bureau ».' },
+      { id:'loc_digital', label:'Où se trouve ce fichier numérique', type:'text',
+        hint:'p. ex. « sur l’ordinateur familial, dans le dossier Documents, dans un dossier nommé Classeur », plus la clé USB dans le coffre-fort.' },
+      { id:'copies', label:'Qui d’autre en a une copie — et qui devrait en recevoir une à jour', type:'text',
+        hint:'p. ex. « mon conjoint, ma sœur Anne, le liquidateur ». Quand vous modifiez quelque chose ici, renvoyez le classeur à toutes ces personnes pour que personne ne garde une version périmée — une bonne habitude : le revoir tous les 6 mois.' },
+      { id:'letter', label:'Une lettre à votre famille', type:'textarea',
+        hint:'Si votre famille lit ceci, le jour le plus difficile est arrivé — et ce sont peut-être les premiers mots vers lesquels elle se tournera. Que voulez-vous surtout lui dire ? Rien ne presse ; vous pourrez toujours y revenir.' },
+    ]},
+
+  { id:'firstweeks', title:'Les deux premières semaines',
+    desc:'Une liste toute prête pour ceux que vous aimez, pour les jours où penser est le plus difficile. Ajoutez ci-dessous ce qui est propre à votre famille.',
+    checklist:true,
+    fields:[
+      { id:'notes', label:'Notes pour ma famille', type:'textarea',
+        hint:'Tout ce qui concerne les premiers jours et que vous seul(e) sauriez.' },
+    ]},
+
+  { id:'people', title:'Personnes-ressources',
+    desc:'Qui appeler — famille, amis et les professionnels qui connaissent déjà vos affaires.',
+    lists:[
+      { id:'contacts', label:'Contacts d’urgence', itemLabel:'Contact', fields:[
+        { id:'name', label:'Nom', type:'text' },
+        { id:'relation', label:'Lien', type:'text' },
+        { id:'phone', label:'Téléphone', type:'text' },
+        { id:'email', label:'Courriel', type:'text' },
+        { id:'notes', label:'Notes', type:'text', hint:'p. ex. a une clé de la maison, habite tout près, parle en mon nom à l’hôpital.' },
+      ]},
+      { id:'pros', label:'Professionnels', itemLabel:'Professionnel', fields:[
+        { id:'role', label:'Rôle', type:'text', hint:'Comptable, conseiller financier, courtier d’assurance, médecin… (le liquidateur et votre notaire ou avocat ont chacun leur place dans Documents légaux, section 14.)' },
+        { id:'name', label:'Nom et cabinet', type:'text' },
+        { id:'phone', label:'Téléphone', type:'text' },
+        { id:'email', label:'Courriel', type:'text' },
+        { id:'notes', label:'Ce dont il ou elle s’occupe pour moi', type:'text' },
+      ]},
+    ]},
+
+  { id:'aboutme', title:'À mon sujet',
+    desc:'Tous les renseignements personnels que les formulaires et les bureaux demanderont — et où se trouvent les documents qui les prouvent.',
+    fields:[
+      { id:'legal_name', label:'Nom légal complet', type:'text' },
+      { id:'aka', label:'Aussi connu(e) sous', type:'text', hint:'Nom de naissance, surnoms utilisés sur des comptes.' },
+      { id:'dob', label:'Date de naissance', type:'date' },
+      { id:'birthplace', label:'Lieu de naissance', type:'text' },
+      { id:'citizenship', label:'Citoyenneté(s)', type:'text' },
+      { id:'address', label:'Adresse du domicile', type:'text' },
+      { id:'phone_email', label:'Téléphone et courriel', type:'text' },
+      { id:'sin_loc', label:'Où est noté mon numéro d’assurance sociale (NAS)', type:'text',
+        hint:'Notez où il se trouve — jamais le numéro lui-même.' },
+      { id:'passport_loc', label:'Où se trouve mon passeport', type:'text' },
+      { id:'birthcert_loc', label:'Où se trouve mon certificat de naissance', type:'text' },
+      { id:'marriage_loc', label:'Où se trouvent les papiers de mariage / divorce', type:'text' },
+      { id:'licence_loc', label:'Où se trouve mon permis de conduire / autre pièce d’identité', type:'text' },
+    ]},
+
+  { id:'medical', title:'Santé',
+    desc:'Pour le corridor de l’hôpital, pas seulement pour le pire scénario.',
+    fields:[
+      { id:'conditions', label:'Problèmes de santé', type:'textarea' },
+      { id:'medications', label:'Médicaments et doses actuels', type:'textarea' },
+      { id:'allergies', label:'Allergies', type:'text' },
+      { id:'bloodtype', label:'Groupe sanguin', type:'text' },
+      { id:'doctor', label:'Médecin de famille / clinique', type:'text' },
+      { id:'pharmacy', label:'Pharmacie', type:'text' },
+      { id:'insurance', label:'Carte d’assurance maladie', type:'text',
+        hint:'Carte d’assurance maladie (RAMQ) et tout régime d’assurance médicaments — où se trouve la carte, pour l’accueil de l’hôpital. Les polices privées (vie ou santé) vont dans la section Assurances.' },
+      { id:'organ', label:'Don d’organes', type:'select',
+        options:['', 'Oui — inscrit(e)', 'Oui — mon souhait, pas encore inscrit', 'Non', 'Indécis(e)'] },
+      { id:'directive_loc', label:'Où se trouvent mes directives médicales anticipées', type:'text',
+        hint:'Directives médicales anticipées — le document qui parle quand je ne le peux plus.' },
+    ]},
+
+  { id:'children', title:'Enfants et personnes à charge',
+    desc:'Tout ce qu’un adulte de confiance devrait savoir pour garder leur monde stable.',
+    lists:[
+      { id:'kids', label:'Enfants / personnes à charge', itemLabel:'Enfant', fields:[
+        { id:'name', label:'Nom', type:'text' },
+        { id:'dob', label:'Date de naissance', type:'date' },
+        { id:'school', label:'École / garderie et enseignant(e)', type:'text' },
+        { id:'doctor', label:'Médecin / pédiatre', type:'text' },
+        { id:'medical', label:'Allergies et notes médicales', type:'textarea' },
+        { id:'routines', label:'Routines, réconforts et petites habitudes', type:'textarea',
+          hint:'L’heure du dodo, la doudou qui compte, ce qui les apaise.' },
+      ]},
+    ],
+    fields:[
+      { id:'guardianship', label:'Souhaits de tutelle', type:'textarea',
+        hint:'Qui vous voudriez pour les élever, et où cela est consigné légalement. Ce que vous écrivez ici exprime vos souhaits et guide votre famille, mais n’a en soi aucune valeur légale — nommez donc un tuteur dans votre testament (au Québec, la tutelle dative).' },
+      { id:'trusted', label:'Autres adultes qu’ils connaissent et en qui ils ont confiance', type:'textarea',
+        hint:'Gardiennes, parents de covoiturage, parrain ou marraine — avec les numéros de téléphone.' },
+    ]},
+
+  { id:'pets', title:'Animaux',
+    desc:'Eux aussi font partie de la famille.',
+    lists:[
+      { id:'pets', label:'Animaux', itemLabel:'Animal', fields:[
+        { id:'name', label:'Nom', type:'text' },
+        { id:'type', label:'Espèce et race', type:'text' },
+        { id:'food', label:'Nourriture et horaire des repas', type:'text' },
+        { id:'vet', label:'Vétérinaire', type:'text' },
+        { id:'medical', label:'Médicaments et notes médicales', type:'text' },
+        { id:'caretaker', label:'Qui les prend si je ne le peux plus', type:'text' },
+      ]},
+    ]},
+
+  { id:'money', title:'Argent',
+    desc:'Où sont les comptes et comment y accéder — emplacements et 4 derniers chiffres seulement, jamais les NIP ni les mots de passe.',
+    lists:[
+      { id:'bank', label:'Comptes bancaires', itemLabel:'Compte', fields:[
+        { id:'institution', label:'Institution', type:'text' },
+        { id:'type', label:'Type de compte', type:'text', hint:'Chèque, épargne, conjoint…' },
+        { id:'last4', label:'4 derniers chiffres', type:'text' },
+        { id:'access', label:'Comment y accéder', type:'text', hint:'Succursale, appli, où se trouve la carte — pas le NIP.' },
+        { id:'joint', label:'Conjoint / bénéficiaire', type:'text' },
+      ]},
+      { id:'cards', label:'Cartes de crédit', itemLabel:'Carte', fields:[
+        { id:'issuer', label:'Émetteur (la banque ou la société sur la carte)', type:'text' },
+        { id:'last4', label:'4 derniers chiffres', type:'text' },
+        { id:'notes', label:'Notes', type:'text', hint:'Des paiements automatiques dessus ? Où se trouve la carte ?' },
+      ]},
+      { id:'invest', label:'Placements et retraite', itemLabel:'Compte', fields:[
+        { id:'institution', label:'Institution', type:'text' },
+        { id:'type', label:'Type', type:'text', hint:'REER, CELI, REEE, FERR, régime de retraite, courtage…' },
+        { id:'contact', label:'Conseiller / contact', type:'text' },
+        { id:'beneficiary', label:'Bénéficiaire désigné', type:'text', hint:'En assurance vie, un bénéficiaire désigné est payé directement, hors succession. Attention : au Québec, une désignation faite seulement à la banque sur un REER ou un CELI n’est généralement pas valide — elle doit figurer dans un testament ou dans un contrat d’assurance ou de fonds distinct. Notez qui est désigné et confirmez-le avec le conseiller ou le notaire.' },
+        { id:'notes', label:'Notes', type:'text', hint:'Où sont les relevés.' },
+      ]},
+      { id:'debts', label:'Prêts et dettes', itemLabel:'Dette', fields:[
+        { id:'lender', label:'Prêteur', type:'text' },
+        { id:'type', label:'Type', type:'text', hint:'Hypothèque, prêt auto, marge de crédit, personnel…' },
+        { id:'notes', label:'Notes', type:'text', hint:'Assuré en cas de décès ? Coemprunteur ?' },
+      ]},
+    ],
+    fields:[
+      { id:'gov', label:'Prestations gouvernementales et rentes', type:'textarea',
+        hint:'RRQ, Sécurité de la vieillesse (PSV), rente de conjoint survivant, prestations d’anciens combattants — tout ce qui vous verse de l’argent, ou le fera.' },
+      { id:'deposit_box', label:'Coffret de sûreté', type:'text',
+        hint:'Banque et succursale, numéro du coffret, et où se trouve la clé. Le coffret peut être scellé au décès jusqu’à ce que le liquidateur soit autorisé à l’ouvrir — n’y rangez donc pas la seule copie du testament, ni ce dont la famille aura besoin tout de suite.' },
+      { id:'access_now', label:'De l’argent accessible tout de suite pour la famille', type:'text',
+        hint:'Quel compte conjoint, ou où se trouve l’argent comptant d’urgence. Les comptes au seul nom du défunt sont souvent gelés au décès, et régler la succession peut prendre des mois — c’est cet argent qui couvre les funérailles et les factures entre-temps. Un compte conjoint n’est pas garanti non plus ; l’argent rapide le plus fiable est souvent l’assurance vie versée directement à un bénéficiaire désigné. Un emplacement, jamais un NIP.' },
+    ]},
+
+  { id:'bills', title:'Factures et abonnements',
+    desc:'Ce qui se paie tout seul chaque mois — pour pouvoir le garder ou l’arrêter en toute connaissance de cause.',
+    lists:[
+      { id:'bills', label:'Paiements récurrents', itemLabel:'Paiement', fields:[
+        { id:'what', label:'De quoi il s’agit', type:'text', hint:'Hydro, loyer, diffusion en continu, prime d’assurance, gym…' },
+        { id:'provider', label:'Fournisseur', type:'text' },
+        { id:'paidfrom', label:'Payé à partir de', type:'text', hint:'Quel compte ou quelle carte.' },
+        { id:'timing', label:'Quand et environ combien', type:'text' },
+        { id:'cancel', label:'Comment annuler / numéro de compte', type:'text' },
+      ]},
+    ]},
+
+  { id:'insurance', title:'Assurances',
+    desc:'L’assurance vie se règle généralement avant tout le reste — facilitez la réclamation.',
+    lists:[
+      { id:'policies', label:'Polices', itemLabel:'Police', fields:[
+        { id:'type', label:'Type', type:'select',
+          options:['', 'Vie', 'Santé / dentaire', 'Habitation / locataire', 'Auto', 'Invalidité / maladies graves', 'Voyage', 'Autre'] },
+        { id:'company', label:'Compagnie', type:'text' },
+        { id:'number', label:'Numéro de police (ou où elle est classée)', type:'text' },
+        { id:'agent', label:'Agent / contact', type:'text' },
+        { id:'beneficiaries', label:'Bénéficiaires', type:'text' },
+        { id:'loc', label:'Où se trouvent les documents de la police', type:'text' },
+      ]},
+    ]},
+
+  { id:'home', title:'Domicile et biens',
+    desc:'Le monde concret : papiers, clés, et la valve que personne ne trouve jamais.',
+    fields:[
+      { id:'ownrent', label:'Propriétaire ou locataire', type:'text', hint:'Et tout détail : syndicat de copropriété, copropriétaires…' },
+      { id:'mortgage', label:'Créancier hypothécaire ou propriétaire (locateur)', type:'text' },
+      { id:'deed_loc', label:'Où se trouve l’acte de propriété / le bail', type:'text' },
+      { id:'utilities', label:'Services publics et fournisseurs', type:'textarea',
+        hint:'Électricité, gaz, eau, Internet, téléphone — fournisseur et où se trouvent les infos de compte.' },
+      { id:'shutoffs', label:'Où se trouvent les valves et disjoncteurs', type:'text',
+        hint:'Entrée d’eau principale, panneau électrique, valve de gaz.' },
+      { id:'safe', label:'Coffre-fort à la maison', type:'text',
+        hint:'Où se trouve le coffre, et où vous gardez la combinaison notée — jamais la combinaison elle-même.' },
+      { id:'keys', label:'Doubles de clés', type:'text', hint:'Maison, auto, boîte aux lettres, chalet — qui les a, où elles sont accrochées.' },
+      { id:'storage', label:'Entreposage et autres biens', type:'text' },
+    ],
+    lists:[
+      { id:'vehicles', label:'Véhicules', itemLabel:'Véhicule', fields:[
+        { id:'vehicle', label:'Année, marque et modèle', type:'text' },
+        { id:'title_loc', label:'Où se trouve le certificat d’immatriculation', type:'text' },
+        { id:'keys', label:'Clés', type:'text' },
+        { id:'notes', label:'Notes', type:'text', hint:'Prêt ou location ? Assuré chez qui ?' },
+      ]},
+    ]},
+
+  { id:'work', title:'Travail et entreprise',
+    desc:'Des avantages auxquels votre famille ignore peut-être avoir droit — et ce qu’il advient de ce que vous avez bâti.',
+    fields:[
+      { id:'employer', label:'Employeur', type:'text' },
+      { id:'hr', label:'Contact RH / avantages sociaux', type:'text' },
+      { id:'benefits', label:'Avantages liés au travail', type:'textarea',
+        hint:'Assurance vie collective, régime de retraite ou cotisations de l’employeur, actions, vacances non prises — souvent des milliers de dollars, souvent non réclamés.' },
+      { id:'business', label:'Entreprise ou travail autonome', type:'textarea',
+        hint:'De quoi s’agit-il, d’où vient et où va l’argent, et qui pourrait la fermer — ou la garder en marche ?' },
+    ]},
+
+  { id:'digital', title:'Vie numérique',
+    desc:'Le courriel est la clé maîtresse de tout le reste. Indiquez où se trouve l’accès — n’écrivez jamais de secrets ici.',
+    fields:[
+      { id:'phone', label:'Déverrouillage du téléphone', type:'text',
+        hint:'Où le code est noté — p. ex. « enveloppe scellée dans le coffre-fort ». Pas le code lui-même.' },
+      { id:'phone_carrier', label:'Fournisseur et compte de téléphone mobile', type:'text',
+        hint:'Avec quel fournisseur est le forfait, et où se trouve l’accès au compte ou la facture — pour que la famille garde le numéro, et les codes de sécurité qu’il reçoit, actifs. L’emplacement, pas le mot de passe.' },
+      { id:'pwmanager', label:'Gestionnaire de mots de passe', type:'text',
+        hint:'Lequel, et où se trouve sa trousse d’urgence ou l’enveloppe du mot de passe maître.' },
+      { id:'computer', label:'Accès à l’ordinateur et à la tablette', type:'text', hint:'Où ces mots de passe sont notés.' },
+      { id:'email', label:'Comptes de courriel principaux', type:'textarea',
+        hint:'Énumérez les adresses. L’accès vient du gestionnaire de mots de passe ci-dessus.' },
+      { id:'twofa', label:'Où sont gardés les codes de secours (A2F)', type:'text',
+        hint:'Où se trouvent les codes de secours imprimés. Famille : gardez mon numéro de téléphone actif jusqu’à ce que tous les comptes soient récupérés.' },
+      { id:'wifi', label:'Wi-Fi de la maison', type:'text', hint:'Nom du réseau, et où se trouve le mot de passe.' },
+      { id:'accounts', label:'Autres comptes en ligne importants', type:'textarea',
+        hint:'Portails gouvernementaux, applis bancaires, PayPal, points aériens — les noms seulement.' },
+      { id:'domains', label:'Noms de domaine et sites web que je possède', type:'text' },
+      { id:'crypto', label:'Cryptomonnaie', type:'text',
+        hint:'Où se trouvent le portefeuille et la sauvegarde papier de la phrase de récupération. N’entrez jamais une phrase de récupération dans un appareil — emplacement papier seulement.' },
+      { id:'photos', label:'Photos de famille et sauvegardes', type:'text', hint:'Où se trouvent réellement la photothèque et les sauvegardes.' },
+      { id:'social', label:'Souhaits pour les réseaux sociaux', type:'textarea',
+        hint:'Pour chaque compte : le garder, le supprimer, ou en faire une page commémorative ? Sur Facebook, vous pouvez nommer un « contact légataire » pour veiller sur votre page — l’avez-vous fait ?' },
+    ]},
+
+  { id:'legal', title:'Documents légaux',
+    desc:'Où se trouvent réellement les documents ayant une valeur légale. Ce classeur y renvoie ; il ne les remplace pas.',
+    fields:[
+      { id:'will_exists', label:'Ai-je un testament ?', type:'select',
+        options:['', 'Oui', 'Non', 'En cours'] },
+      { id:'will_loc', label:'Où se trouve le testament original', type:'text',
+        hint:'Pour un testament olographe (écrit à la main) ou devant témoins, le tribunal exige l’original et doit le vérifier. Pour un testament notarié (le plus courant au Québec), le notaire conserve l’original et il n’a pas à être vérifié — notez quel notaire, pour que la famille puisse en obtenir une copie authentique.' },
+      { id:'will_date', label:'Date du testament', type:'date' },
+      { id:'executor', label:'Liquidateur (exécuteur testamentaire)', type:'text', hint:'Autrefois appelé « exécuteur testamentaire ».' },
+      { id:'poa_fin', label:'Procuration — finances', type:'text',
+        hint:'Qui la détient, et où se trouve le document. Au Québec, une procuration ne vaut que tant que vous êtes apte ; dès l’inaptitude, c’est le mandat de protection qui prend le relais (voir ci-dessous).' },
+      { id:'poa_care', label:'Mandat de protection (soins et biens)', type:'text',
+        hint:'Au Québec, le mandat de protection (autrefois « mandat en cas d’inaptitude ») désigne qui décide pour vous — soins et finances — si vous devenez inapte. Notez où il se trouve et qui est le mandataire.' },
+      { id:'lawyer', label:'Notaire / avocat', type:'text' },
+      { id:'trusts', label:'Fiducies', type:'text' },
+      { id:'taxes', label:'Déclarations de revenus passées', type:'text', hint:'Où elles sont classées, et qui a préparé celle de l’an dernier. (Au Québec, deux déclarations : Revenu Québec et l’ARC.)' },
+      { id:'other', label:'Autres documents légaux', type:'textarea',
+        hint:'Contrat de mariage, jugement de divorce, papiers de citoyenneté, dossiers militaires.' },
+    ]},
+
+  { id:'wishes', title:'Dernières volontés',
+    desc:'La page la plus difficile — et le plus beau cadeau. Chaque choix fait ici est une décision que votre famille n’aura pas à deviner.',
+    fields:[
+      { id:'disposition', label:'Inhumation ou crémation', type:'select',
+        options:['', 'Inhumation', 'Crémation', 'Inhumation écologique', 'Don du corps à la science', 'Indécis(e)'] },
+      { id:'funeral_home', label:'Salon funéraire souhaité / arrangements préarrangés', type:'text',
+        hint:'Si quelque chose est prépayé, dites où se trouve le contrat — qu’on ne paie pas deux fois.' },
+      { id:'service', label:'La cérémonie', type:'textarea',
+        hint:'Religieuse ou non, musique, lectures, ton. Une célébration ? Dites-le.' },
+      { id:'resting', label:'Dernier lieu de repos', type:'text',
+        hint:'Un lot au cimetière déjà acheté ? Où disperser les cendres ?' },
+      { id:'obituary', label:'Notes pour l’avis de décès', type:'textarea',
+        hint:'Ce que vous aimeriez qu’on mentionne — et ce que vous ne voudriez pas.' },
+      { id:'notify', label:'Personnes à prévenir', type:'textarea',
+        hint:'Vieux amis, collègues, communautés — des noms que votre famille ne penserait pas à appeler.' },
+      { id:'belongings', label:'Objets particuliers et à qui ils reviennent', type:'textarea',
+        hint:'Bijoux, objets de famille, souvenirs — et où se trouve toute liste signée de dons précis. Ce que vous écrivez ici est un souhait, non contraignant : seul le testament décide qui reçoit quoi, et une liste séparée ne compte que si le testament le prévoit — demandez à votre notaire.' },
+      { id:'letters', label:'Lettres et messages', type:'text',
+        hint:'Où attendent les lettres personnelles à vos proches.' },
+    ]},
+];
+
+/* ============================================================
+   État
+   ============================================================ */
+const STORE_KEY = 'classeur-au-cas-ou-v1';
+const META_KEY = 'classeur-au-cas-ou-meta-v1';
+
+function emptyData(){
+  const d = { version:1, updated:null, sections:{} };
+  for (const s of SCHEMA){
+    d.sections[s.id] = { f:{}, l:{} };
+    for (const list of (s.lists||[])) d.sections[s.id].l[list.id] = [];
+  }
+  return d;
+}
+
+let data = emptyData();
+let meta = { editsSinceBackup: 0 };
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw){
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.version === 1 && parsed.sections) data = normalize(parsed);
+    }
+    const m = localStorage.getItem(META_KEY);
+    if (m) meta = Object.assign(meta, JSON.parse(m));
+  }catch(e){ /* stockage corrompu : repartir à neuf, ne jamais planter */ }
+}
+
+function normalize(parsed){
+  const d = emptyData();
+  d.updated = parsed.updated || null;
+  for (const s of SCHEMA){
+    const src = parsed.sections[s.id];
+    if (!src) continue;
+    for (const f of (s.fields||[])) if (src.f && typeof src.f[f.id] === 'string') d.sections[s.id].f[f.id] = src.f[f.id];
+    for (const list of (s.lists||[])){
+      const arr = src.l && Array.isArray(src.l[list.id]) ? src.l[list.id] : [];
+      d.sections[s.id].l[list.id] = arr.map(item => {
+        const clean = {};
+        for (const f of list.fields) if (item && typeof item[f.id] === 'string') clean[f.id] = item[f.id];
+        return clean;
+      });
+    }
+  }
+  return d;
+}
+
+let saveTimer = null;
+function scheduleSave(){
+  savedNote.textContent = L.saving;
+  savedNote.classList.remove('ok');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 400);
+}
+function saveNow(){
+  data.updated = new Date().toISOString();
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    localStorage.setItem(META_KEY, JSON.stringify(meta));
+    savedNote.textContent = L.saved;
+    savedNote.classList.add('ok');
+  }catch(e){
+    savedNote.textContent = 'Impossible d’enregistrer — sauvegardez une copie !';
+  }
+}
+
+/* ============================================================
+   Rendu — formulaire
+   ============================================================ */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function fieldHTML(sec, f, value, listCtx){
+  const key = listCtx
+    ? `data-sid="${sec.id}" data-lid="${listCtx.lid}" data-idx="${listCtx.idx}" data-fid="${f.id}"`
+    : `data-sid="${sec.id}" data-fid="${f.id}"`;
+  const idAttr = listCtx ? `${sec.id}_${listCtx.lid}_${listCtx.idx}_${f.id}` : `${sec.id}_${f.id}`;
+  let input;
+  if (f.type === 'textarea'){
+    input = `<textarea id="${idAttr}" ${key}>${esc(value)}</textarea>`;
+  } else if (f.type === 'select'){
+    const opts = f.options.map(o =>
+      `<option value="${esc(o)}"${o === value ? ' selected' : ''}>${esc(o)}</option>`).join('');
+    input = `<select id="${idAttr}" ${key}>${opts}</select>`;
+  } else {
+    input = `<input type="${f.type === 'date' ? 'date' : 'text'}" id="${idAttr}" ${key} value="${esc(value)}">`;
+  }
+  return `<div class="field${f.type === 'textarea' ? ' wide' : ''}">
+    <label for="${idAttr}">${esc(f.label)}</label>
+    ${f.hint ? `<p class="hint">${esc(f.hint)}</p>` : ''}
+    ${input}
+  </div>`;
+}
+
+function listItemHTML(sec, list, idx, item){
+  const inner = list.fields.map(f => fieldHTML(sec, f, item[f.id] || '', {lid:list.id, idx})).join('');
+  return `<div class="item" data-item="${idx}">
+    <div class="itemhead">
+      <b>${esc(L.itemN(list.itemLabel, idx + 1))}</b>
+      <button class="rm" data-rm data-sid="${sec.id}" data-lid="${list.id}" data-idx="${idx}">${L.removeItem}</button>
+    </div>
+    <div class="fields">${inner}</div>
+  </div>`;
+}
+
+function listHTML(sec, list){
+  const items = data.sections[sec.id].l[list.id];
+  return `<div class="listwrap" data-listwrap="${sec.id}:${list.id}">
+    <h3>${esc(list.label)}</h3>
+    <div class="items">${items.map((it, i) => listItemHTML(sec, list, i, it)).join('')}</div>
+    <button class="add" data-add data-sid="${sec.id}" data-lid="${list.id}">${esc(L.addItem(list.itemLabel))}</button>
+  </div>`;
+}
+
+function checklistHTML(){
+  return FIRST_WEEKS.map(p => `<div class="phase">
+    <h3>${esc(p.when)}</h3>
+    <ul>${p.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>
+  </div>`).join('');
+}
+
+function sectionHTML(sec, n){
+  const f = data.sections[sec.id].f;
+  const fields = (sec.fields||[]).map(fd => fieldHTML(sec, fd, f[fd.id] || '')).join('');
+  const lists = (sec.lists||[]).map(list => listHTML(sec, list)).join('');
+  return `<details class="sec" data-sec="${sec.id}"${n === 1 ? ' open' : ''}>
+    <summary>
+      <span class="num">${n}</span>
+      <h2>${esc(sec.title)}</h2>
+      <span class="count" data-count="${sec.id}"></span>
+      <span class="chev">›</span>
+    </summary>
+    ${sec.desc ? `<p class="desc">${esc(sec.desc)}</p>` : ''}
+    <div class="secbody">
+      ${sec.checklist ? checklistHTML() : ''}
+      ${fields ? `<div class="fields">${fields}</div>` : ''}
+      ${lists}
+    </div>
+  </details>`;
+}
+
+function renderAll(){
+  sectionsEl.innerHTML = SCHEMA.map((s, i) => sectionHTML(s, i + 1)).join('');
+  for (const s of SCHEMA) updateCount(s.id);
+}
+
+function rerenderList(sid, lid){
+  const sec = SCHEMA.find(s => s.id === sid);
+  const list = sec.lists.find(l => l.id === lid);
+  const wrap = sectionsEl.querySelector(`[data-listwrap="${sid}:${lid}"]`);
+  const items = data.sections[sid].l[lid];
+  wrap.querySelector('.items').innerHTML = items.map((it, i) => listItemHTML(sec, list, i, it)).join('');
+}
+
+function answeredCount(sid){
+  const sec = SCHEMA.find(s => s.id === sid);
+  const d = data.sections[sid];
+  let n = 0;
+  for (const f of (sec.fields||[])) if ((d.f[f.id]||'').trim()) n++;
+  for (const list of (sec.lists||[]))
+    for (const item of d.l[list.id])
+      for (const f of list.fields) if ((item[f.id]||'').trim()) n++;
+  return n;
+}
+
+function updateCount(sid){
+  const el = sectionsEl.querySelector(`[data-count="${sid}"]`);
+  if (el) el.textContent = L.answered(answeredCount(sid));
+}
+
+/* ============================================================
+   Événements
+   ============================================================ */
+const sectionsEl = document.getElementById('sections');
+const savedNote = document.getElementById('savedNote');
+const backupNag = document.getElementById('backupNag');
+
+sectionsEl.addEventListener('input', e => {
+  const t = e.target;
+  const { sid, fid, lid, idx } = t.dataset;
+  if (!sid || !fid) return;
+  if (lid !== undefined){
+    data.sections[sid].l[lid][Number(idx)][fid] = t.value;
+  } else {
+    data.sections[sid].f[fid] = t.value;
+  }
+  meta.editsSinceBackup++;
+  if (meta.editsSinceBackup >= 25) backupNag.hidden = false;
+  updateCount(sid);
+  scheduleSave();
+});
+
+sectionsEl.addEventListener('click', e => {
+  const add = e.target.closest('[data-add]');
+  const rm = e.target.closest('[data-rm]');
+  if (add){
+    const { sid, lid } = add.dataset;
+    data.sections[sid].l[lid].push({});
+    rerenderList(sid, lid);
+    scheduleSave();
+  } else if (rm){
+    const { sid, lid, idx } = rm.dataset;
+    const item = data.sections[sid].l[lid][Number(idx)];
+    const hasContent = Object.values(item).some(v => (v||'').trim());
+    if (hasContent && !confirm('Retirer cette entrée ?')) return;
+    data.sections[sid].l[lid].splice(Number(idx), 1);
+    rerenderList(sid, lid);
+    updateCount(sid);
+    scheduleSave();
+  }
+});
+
+/* ---------- sauvegarde / restauration ---------- */
+function doExport(){
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${L.backupName}-${(data.updated||'').slice(0,10) || 'nouveau'}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  meta.editsSinceBackup = 0;
+  backupNag.hidden = true;
+  saveNow();
+}
+document.getElementById('btnExport').addEventListener('click', doExport);
+document.getElementById('btnNagExport').addEventListener('click', doExport);
+
+document.getElementById('btnImport').addEventListener('click', () =>
+  document.getElementById('fileImport').click());
+document.getElementById('fileImport').addEventListener('change', e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || parsed.version !== 1 || !parsed.sections) throw new Error('bad');
+      if (!confirm(L.importConfirm)) return;
+      data = normalize(parsed);
+      renderAll();
+      saveNow();
+    }catch(err){ alert(L.importBad); }
+  };
+  reader.readAsText(file);
+});
+
+/* ============================================================
+   Impression — couverture → feuille d’accès → liste → sections
+   ============================================================ */
+const printRoot = document.getElementById('printRoot');
+const g = (sid, fid) => (data.sections[sid].f[fid] || '').trim();
+
+function pval(v, lines){
+  if (v && v.trim()) return `<span class="val">${esc(v)}</span>`;
+  let out = '';
+  for (let i = 0; i < (lines || 1); i++) out += '<span class="wline"></span>';
+  return out;
+}
+function pfield(f, v){
+  return `<div class="pf${f.type === 'textarea' ? ' full' : ''}"><b>${esc(f.label)}</b>${pval(v, f.type === 'textarea' ? 3 : 1)}</div>`;
+}
+function pfieldsGrid(fields, get){
+  return `<div class="pgrid">${fields.map(f => pfield(f, get(f))).join('')}</div>`;
+}
+
+function heirSheetHTML(){
+  const contacts = data.sections.people.l.contacts
+    .filter(c => (c.name||'').trim()).slice(0, 3);
+  const contactRows = contacts.length
+    ? contacts.map(c => `<span class="val">${esc(c.name)}${c.relation ? ' ('+esc(c.relation)+')' : ''}${c.phone ? ' — '+esc(c.phone) : ''}</span>`).join('<br>')
+    : '<span class="wline"></span><span class="wline"></span><span class="wline"></span>';
+  const row = (label, v) => `<div class="hrow"><b>${esc(label)}</b>${pval(v)}</div>`;
+  return `<section class="heir">
+    <h1>${esc(L.heirTitle)}</h1>
+    <p class="sub">${esc(L.heirSub)}</p>
+    ${row('Ce classeur appartient à', g('start','owner_name'))}
+    ${row('Le classeur complet (imprimé) se trouve ici', g('start','loc_print'))}
+    ${row('Le classeur numérique (un fichier qui s’ouvre dans tout navigateur web) se trouve ici', g('start','loc_digital'))}
+    <div class="hrow"><b>Appelez ces personnes en premier</b>${contactRows}</div>
+    ${row('Le testament original se trouve ici', g('legal','will_loc'))}
+    ${row('Le liquidateur est', g('legal','executor'))}
+    ${row('Notre notaire / avocat est', g('legal','lawyer'))}
+    ${row('Mots de passe : le gestionnaire de mots de passe et l’enveloppe du mot de passe maître se trouvent ici', g('digital','pwmanager'))}
+    ${row('Salon funéraire / arrangements préarrangés', g('wishes','funeral_home'))}
+    <div class="warn"><b>Deux erreurs que presque tout le monde fait :</b>
+      1) Commandez au moins 10 copies d’acte de décès (Directeur de l’état civil) — chaque banque et assureur en veut une.
+      2) N’ANNULEZ PAS mon forfait téléphonique ni mon courriel — ils reçoivent les codes de sécurité
+      nécessaires pour récupérer tous les autres comptes. Gardez-les actifs plusieurs mois.</div>
+  </section>`;
+}
+
+function printSectionHTML(sec, n){
+  const d = data.sections[sec.id];
+  let body = '';
+  if (sec.checklist){
+    body += FIRST_WEEKS.map(p => `<div class="pphase"><h3>${esc(p.when)}</h3>
+      <ul>${p.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('');
+  }
+  if ((sec.fields||[]).length) body += pfieldsGrid(sec.fields, f => d.f[f.id]);
+  for (const list of (sec.lists||[])){
+    body += `<div class="plisthead">${esc(list.label)}</div>`;
+    const items = d.l[list.id].filter(it => list.fields.some(f => (it[f.id]||'').trim()));
+    for (const it of items)
+      body += `<div class="pcard">${pfieldsGrid(list.fields, f => it[f.id])}</div>`;
+    const spares = items.length ? 1 : 2;
+    for (let i = 0; i < spares; i++)
+      body += `<div class="pcard">${pfieldsGrid(list.fields, () => '')}</div>`;
+  }
+  return `<section class="psec"><h2><span class="pn">${n}</span>${esc(sec.title)}</h2>${body}</section>`;
+}
+
+function buildPrint(){
+  const updated = data.updated ? new Date(data.updated).toLocaleDateString('fr-CA') : '';
+  let html = `<section class="pcover">
+    <h1 class="serif">${esc(L.printCoverTitle)}</h1>
+    <p class="ptag">${esc(L.printCoverTag)}</p>
+    <div class="rule"></div>
+    <div class="pof">${esc(L.printCoverOf)}</div>
+    <div class="pname">${esc(g('start','owner_name')) || '&nbsp;'}</div>
+    ${updated ? `<div class="pupd">${esc(L.printUpdated(updated))}</div>` : ''}
+    <div class="pnote">${esc(L.printFooter)}</div>
+  </section>`;
+  html += heirSheetHTML();
+  html += SCHEMA.map((s, i) => printSectionHTML(s, i + 1)).join('');
+  html += `<div class="pend">${esc(L.printFooter)}</div>`;
+  printRoot.innerHTML = html;
+}
+
+document.getElementById('btnPrint').addEventListener('click', () => {
+  buildPrint();
+  window.print();
+});
+window.addEventListener('beforeprint', buildPrint);
+
+/* ============================================================
+   Démarrage
+   ============================================================ */
+load();
+renderAll();
+savedNote.textContent = data.updated ? L.saved : '';
+if (data.updated) savedNote.classList.add('ok');
+</script>
+</body>
+</html>
