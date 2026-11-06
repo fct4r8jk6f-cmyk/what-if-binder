@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Le Classeur Au Cas Où</title>
+<!-- Métadonnées de partage et de recherche seulement : rien ici n’est téléchargé quand la page roule. -->
+<meta name="description" content="Un classeur d’urgence familiale privé, pensé pour le Québec : 15 sections guidées pour que votre famille retrouve vos comptes, vos papiers et vos volontés. Aucun compte, aucun infonuagique — vos réponses restent sur votre appareil. S’imprime en PDF.">
+<link rel="canonical" href="https://fct4r8jk6f-cmyk.github.io/what-if-binder/le-classeur-au-cas-ou.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Le Classeur Au Cas Où">
+<meta property="og:description" content="S’il vous arrivait quelque chose ce soir, votre famille saurait-elle où trouver l’essentiel ? Un classeur d’urgence guidé et privé, qui reste sur votre appareil et s’imprime en PDF.">
+<meta property="og:url" content="https://fct4r8jk6f-cmyk.github.io/what-if-binder/le-classeur-au-cas-ou.html">
+<meta property="og:image" content="https://fct4r8jk6f-cmyk.github.io/what-if-binder/og-fr.jpg">
+<meta property="og:locale" content="fr_CA">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root{
     --paper:#faf6ee; --card:#ffffff; --ink:#26302f; --ink-soft:#5c6a68;
@@ -12,6 +22,7 @@
     --radius:10px;
   }
   *{box-sizing:border-box}
+  [hidden]{display:none !important} /* .nag / .ios set display, which would override the attribute */
   html{-webkit-text-size-adjust:100%}
   body{
     margin:0; background:var(--paper); color:var(--ink);
@@ -30,6 +41,9 @@
     padding:10px 14px; font-size:13.5px; color:var(--teal-dark); text-align:left;
   }
   .privacy b{display:block; margin-bottom:2px}
+  .privacy .ios{display:block; margin-top:8px; padding-top:8px; border-top:1px solid #c9dbd8}
+  .kit{margin:12px 0 0; font-size:14px; color:var(--ink-soft)}
+  .kit a{color:var(--teal); font-weight:600}
 
   /* ---------- toolbar ---------- */
   .toolbar{
@@ -167,7 +181,13 @@
       <b>Vos réponses ne quittent jamais votre appareil.</b>
       Un seul fichier qui fonctionne entièrement hors ligne — aucun compte, aucun infonuagique,
       aucun abonnement. Ne nous croyez pas sur parole : activez le mode avion et continuez.
+      <span class="ios" id="iosNote" hidden><b>Sur iPhone ou iPad :</b> Safari efface ce qu’un
+      site a enregistré si vous ne l’ouvrez pas pendant environ une semaine. Touchez
+      <strong>Sauvegarder une copie</strong> chaque fois que vous avez terminé — <strong>Restaurer</strong> ramène
+      tout à partir de ce fichier.</span>
     </div>
+    <p class="kit" id="kitLink" hidden>Vous le préférez prêt à imprimer ?
+      <a id="kitA" href="#" target="_blank" rel="noopener noreferrer">Obtenir la trousse prête à imprimer →</a></p>
   </header>
 
   <div class="toolbar">
@@ -180,7 +200,7 @@
   </div>
 
   <div class="nag" id="backupNag" hidden>
-    <span>Vous avez ajouté beaucoup de choses depuis votre dernière sauvegarde. Vos réponses
+    <span id="nagText">Vous avez ajouté beaucoup de choses depuis votre dernière sauvegarde. Vos réponses
     n’existent que dans ce navigateur — téléchargez une copie de sauvegarde pour les mettre à l’abri.</span>
     <button id="btnNagExport">Sauvegarder maintenant</button>
   </div>
@@ -193,8 +213,9 @@
       <p style="margin:0 0 8px">Ce fichier est un classeur interactif, et les aperçus de fichiers ne
       peuvent pas l’exécuter. Il lui faut un navigateur web — et tout reste sur votre propre appareil.</p>
       <p style="margin:0 0 8px"><b>Sur iPhone ou iPad :</b> ouvrez plutôt la version en ligne dans
-      Safari (le lien se trouve sur votre page de téléchargement) — tout le classeur fonctionne
-      directement, sans rien à installer.</p>
+      Safari —
+      <a href="https://fct4r8jk6f-cmyk.github.io/what-if-binder/le-classeur-au-cas-ou.html" style="color:#1f5f5b">fct4r8jk6f-cmyk.github.io/what-if-binder/le-classeur-au-cas-ou.html</a> —
+      tout le classeur fonctionne directement, sans rien à installer.</p>
       <p style="margin:0"><b>Sur un ordinateur :</b> enregistrez ce fichier, puis double-cliquez
       dessus ; il s’ouvre dans votre navigateur, prêt à remplir, et fonctionne sans aucune connexion Internet.</p>
     </div>
@@ -212,6 +233,18 @@
 
 <script>
 'use strict';
+
+/* Où la trousse payante prête à imprimer est vendue (URL de l’annonce Etsy). Vide = le
+   lien « Obtenir la trousse » reste caché. Il ne s’affiche que sur la copie hébergée en
+   ligne, jamais dans un fichier téléchargé (l’acheteur a déjà la trousse). */
+const SHOP_URL = '';
+
+/* iPhone/iPad dans un onglet : Safari efface les données d’un site après environ une
+   semaine sans visite (limite de 7 jours de WebKit) — on rappelle la sauvegarde plus tôt. */
+const IOS = /iP(hone|od|ad)/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IOS_TAB = IOS && navigator.standalone !== true;
+const NAG_AT = IOS_TAB ? 5 : 25;
 
 /* ============================================================
    Chaînes d’interface (chrome). Les libellés de champs sont dans SCHEMA.
@@ -234,6 +267,7 @@ const L = {
   importConfirm: 'Restaurer à partir de cette sauvegarde ? Vos réponses actuelles dans ce navigateur seront remplacées.',
   importBad: 'Ce fichier ne ressemble pas à une sauvegarde du Classeur Au Cas Où.',
   backupName: 'classeur-au-cas-ou-sauvegarde',
+  nagIOS: 'Avant de fermer : sauvegardez une copie. Sur iPhone et iPad, Safari peut effacer ces réponses si vous n’ouvrez pas le classeur pendant environ une semaine.',
 };
 
 /* ============================================================
@@ -731,7 +765,7 @@ sectionsEl.addEventListener('input', e => {
     data.sections[sid].f[fid] = t.value;
   }
   meta.editsSinceBackup++;
-  if (meta.editsSinceBackup >= 25) backupNag.hidden = false;
+  if (meta.editsSinceBackup >= NAG_AT) backupNag.hidden = false;
   updateCount(sid);
   scheduleSave();
 });
@@ -886,6 +920,15 @@ load();
 renderAll();
 savedNote.textContent = data.updated ? L.saved : '';
 if (data.updated) savedNote.classList.add('ok');
+if (IOS_TAB){
+  document.getElementById('iosNote').hidden = false;
+  document.getElementById('nagText').textContent = L.nagIOS;
+}
+if (meta.editsSinceBackup >= NAG_AT) backupNag.hidden = false;
+if (SHOP_URL && location.protocol !== 'file:'){
+  document.getElementById('kitA').href = SHOP_URL;
+  document.getElementById('kitLink').hidden = false;
+}
 </script>
 </body>
 </html>

@@ -23,6 +23,26 @@ life, legal documents, final wishes, and more).
 - **Local-first privacy is the promise.** Answers never leave the device; do not
   add analytics, cloud sync, or any network call.
 
+## How the files here are made
+- `index.html` and `le-classeur-au-cas-ou.html` are **byte-identical copies** of
+  `app/the-what-if-binder.html` / `app/le-classeur-au-cas-ou.html` in the private
+  `whatif` repo. Edit there, run its `tools/verify.js`, then copy here — never
+  edit these two files directly, or the next sync overwrites the change.
+- `og-en.jpg` / `og-fr.jpg` are the link-preview cards (rendered by `whatif`'s
+  `tools/build.js`). The `og:`/`description` meta tags are inert when the page
+  runs — they don't make requests.
+- **`SHOP_URL`** (top of each file's script) is the Etsy listing for the paid
+  print-ready kit. Empty = the "Get the print-ready kit" link stays hidden; it
+  only ever shows on this hosted copy (never in a downloaded `file:` copy).
+  Set it in `whatif/app/*.html`, verify, and sync here once the listings exist.
+- Buyers on iPhone/iPad are sent here (the downloaded file only previews on
+  iOS). Safari wipes a site's saved data after ~7 days without a visit, so the
+  app shows an iOS-only backup note and nags for a backup after 5 edits there.
+  Don't remove that.
+- If this site's URL ever changes (account rename, custom domain), update the
+  hard-coded URLs in both apps' read-only fallback and meta tags, and in both
+  quick-start guides in `whatif` — buyers' PDFs point here.
+
 ## Related projects
 Sibling repos under the same account (ask to add via add_repo when a task needs
 them):

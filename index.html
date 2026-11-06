@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The What-If Binder</title>
+<!-- Share/search metadata only: nothing here is fetched when the page runs. -->
+<meta name="description" content="A private family emergency binder: 15 guided sections so your family can find your accounts, papers and wishes. No account, no cloud — your answers stay on your device. Prints to a clean PDF.">
+<link rel="canonical" href="https://fct4r8jk6f-cmyk.github.io/what-if-binder/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The What-If Binder">
+<meta property="og:description" content="If something happened to you tonight, could your family find what they'd need? A private, guided emergency binder that stays on your device and prints to PDF.">
+<meta property="og:url" content="https://fct4r8jk6f-cmyk.github.io/what-if-binder/">
+<meta property="og:image" content="https://fct4r8jk6f-cmyk.github.io/what-if-binder/og-en.jpg">
+<meta property="og:locale" content="en_CA">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root{
     --paper:#faf6ee; --card:#ffffff; --ink:#26302f; --ink-soft:#5c6a68;
@@ -12,6 +22,7 @@
     --radius:10px;
   }
   *{box-sizing:border-box}
+  [hidden]{display:none !important} /* .nag / .ios set display, which would override the attribute */
   html{-webkit-text-size-adjust:100%}
   body{
     margin:0; background:var(--paper); color:var(--ink);
@@ -30,6 +41,9 @@
     padding:10px 14px; font-size:13.5px; color:var(--teal-dark); text-align:left;
   }
   .privacy b{display:block; margin-bottom:2px}
+  .privacy .ios{display:block; margin-top:8px; padding-top:8px; border-top:1px solid #c9dbd8}
+  .kit{margin:12px 0 0; font-size:14px; color:var(--ink-soft)}
+  .kit a{color:var(--teal); font-weight:600}
 
   /* ---------- toolbar ---------- */
   .toolbar{
@@ -167,7 +181,12 @@
       <b>Your answers never leave this device.</b>
       This is a single file that works completely offline — no account, no cloud, no
       subscription. Don't take our word for it: turn on airplane mode and keep going.
+      <span class="ios" id="iosNote" hidden><b>On iPhone or iPad:</b> Safari erases what a
+      website has saved if you don't open it for about a week. Tap <strong>Save a backup</strong> each
+      time you finish — <strong>Restore</strong> brings everything back from that file.</span>
     </div>
+    <p class="kit" id="kitLink" hidden>Prefer it ready to print?
+      <a id="kitA" href="#" target="_blank" rel="noopener noreferrer">Get the print-ready kit →</a></p>
   </header>
 
   <div class="toolbar">
@@ -180,7 +199,7 @@
   </div>
 
   <div class="nag" id="backupNag" hidden>
-    <span>You've added a lot since your last backup. Your answers live only in this
+    <span id="nagText">You've added a lot since your last backup. Your answers live only in this
     browser — download a backup file to keep them safe.</span>
     <button id="btnNagExport">Backup now</button>
   </div>
@@ -213,6 +232,18 @@
 <script>
 'use strict';
 
+/* Where the paid print-ready kit is sold (the Etsy listing URL). Empty = the
+   "Get the print-ready kit" link stays hidden. It only ever shows on the hosted
+   web copy, never in a downloaded file (a buyer already has the kit). */
+const SHOP_URL = '';
+
+/* iPhone/iPad in a browser tab: Safari deletes a site's saved data after about a
+   week without a visit (WebKit's 7-day storage cap), so nudge for backups early. */
+const IOS = /iP(hone|od|ad)/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IOS_TAB = IOS && navigator.standalone !== true;
+const NAG_AT = IOS_TAB ? 5 : 25;
+
 /* ============================================================
    UI strings (chrome). Field labels live in SCHEMA.
    fr-CA edition: translate L + SCHEMA labels; engine unchanged.
@@ -235,6 +266,7 @@ const L = {
   importConfirm: 'Restore from this backup? Your current answers in this browser will be replaced.',
   importBad: "That file doesn't look like a What-If Binder backup.",
   backupName: 'what-if-binder-backup',
+  nagIOS: "Before you close: save a backup. On iPhone and iPad, Safari can erase these answers if you don't open the binder for about a week.",
 };
 
 /* ============================================================
@@ -732,7 +764,7 @@ sectionsEl.addEventListener('input', e => {
     data.sections[sid].f[fid] = t.value;
   }
   meta.editsSinceBackup++;
-  if (meta.editsSinceBackup >= 25) backupNag.hidden = false;
+  if (meta.editsSinceBackup >= NAG_AT) backupNag.hidden = false;
   updateCount(sid);
   scheduleSave();
 });
@@ -887,6 +919,15 @@ load();
 renderAll();
 savedNote.textContent = data.updated ? L.saved : '';
 if (data.updated) savedNote.classList.add('ok');
+if (IOS_TAB){
+  document.getElementById('iosNote').hidden = false;
+  document.getElementById('nagText').textContent = L.nagIOS;
+}
+if (meta.editsSinceBackup >= NAG_AT) backupNag.hidden = false;
+if (SHOP_URL && location.protocol !== 'file:'){
+  document.getElementById('kitA').href = SHOP_URL;
+  document.getElementById('kitLink').hidden = false;
+}
 </script>
 </body>
 </html>
